@@ -10,6 +10,6 @@ export class HomeComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    alert('Welcome, User!');
+    alert('Welcome, you are loggged in successfuly !!!');
   }
 }
