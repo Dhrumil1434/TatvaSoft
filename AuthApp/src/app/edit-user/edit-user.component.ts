@@ -8,33 +8,54 @@ import { AuthService } from '../auth.service';
   styleUrls: ['./edit-user.component.css']
 })
 export class EditUserComponent implements OnInit {
-  userId!: number;
+  userId: number | null = null;
   userData: any = {};
   errorMessage: string = '';
 
-  constructor(private route: ActivatedRoute, private authService: AuthService, private router: Router) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.userId = +id;
-      this.loadUser();
+    if (id !== null) {
+      const parsedId = +id;
+      if (!isNaN(parsedId)) {
+        this.userId = parsedId;
+        this.loadUser(this.userId);
+      } else {
+        this.errorMessage = 'Invalid user ID';
+      }
     } else {
-      this.errorMessage = 'Invalid user ID';
+      this.errorMessage = 'User ID parameter not found';
     }
   }
 
-  loadUser(): void {
-    this.authService.getUserById(this.userId).subscribe({
-      next: (data) => this.userData = data,
-      error: (err) => this.errorMessage = 'Error loading user data'
+  loadUser(id: number): void {
+    this.authService.getUserById(id).subscribe({
+      next: (data: any) => {
+        this.userData = data;
+      },
+      error: (err: any) => {
+        this.errorMessage = 'Error loading user data';
+      }
     });
   }
 
-  updateUser(): void {
-    this.authService.editUser(this.userId, this.userData).subscribe({
-      next: () => this.router.navigate(['/']),
-      error: (err) => this.errorMessage = 'Error updating user'
-    });
+  editUser(): void {
+    if (this.userId !== null) {
+      this.authService.editUser(this.userId, this.userData).subscribe({
+        next: () => {
+          this.router.navigate(['/']);
+        },
+        error: (err: any) => {
+          this.errorMessage = 'Error updating user';
+        }
+      });
+    } else {
+      this.errorMessage = 'Invalid user ID';
+    }
   }
 }

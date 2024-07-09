@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../auth.service';
+import { Location } from '@angular/common'; // Import Location service
 
 @Component({
   selector: 'app-home',
@@ -10,7 +11,10 @@ export class HomeComponent implements OnInit {
   users: any[] = [];
   errorMessage: string = '';
 
-  constructor(private authService: AuthService) { }
+  constructor(
+    private authService: AuthService,
+    private location: Location // Inject Location service
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
@@ -18,25 +22,30 @@ export class HomeComponent implements OnInit {
 
   loadUsers(): void {
     this.authService.getUsers().subscribe({
-      next: (data: any[]) => {
-        this.users = data; // Assign received data to users
+      next: (data) => {
+        this.users = data;
       },
-      error: (err: any) => {
+      error: (err) => {
         this.errorMessage = 'Error loading users';
+        console.error(err);
       }
     });
   }
 
   deleteUser(id: number): void {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.authService.deleteUser(id).subscribe({
-        next: () => {
-          this.loadUsers(); // Reload users after deletion
-        },
-        error: (err: any) => {
-          this.errorMessage = 'Error deleting user';
-        }
-      });
-    }
+    this.authService.deleteUser(id).subscribe({
+      next: () => {
+        // Remove the deleted user from the local list
+        this.users = this.users.filter(user => user.id !== id);
+        alert('User deleted successfully');
+        
+        // Reload the current route to reflect changes
+        this.location.go(this.location.path());
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Error deleting user');
+      }
+    });
   }
 }
